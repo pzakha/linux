@@ -124,7 +124,7 @@ struct hv_ring_buffer_info {
 	spinlock_t ring_lock;
 
 	u32 ring_datasize;		/* < ring_size */
-	u32 priv_read_index;
+	u32 priv_read_index;		/* read cursor */
 };
 
 /*
