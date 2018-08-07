@@ -467,6 +467,12 @@ static const struct midr_range arm64_ssb_cpus[] = {
 	.matches = is_affected_midr_range,			\
 	.midr_range = MIDR_RANGE(model, v_min, r_min, v_max, r_max)
 
+static void __maybe_unused
+cpu_enable_cache_maint_trap(const struct arm64_cpu_capabilities *__unused)
+{
+	sysreg_clear_set(sctlr_el1, SCTLR_EL1_UCI, 0);
+}
+
 #define CAP_MIDR_ALL_VERSIONS(model)					\
 	.matches = is_affected_midr_range,				\
 	.midr_range = MIDR_ALL_VERSIONS(model)
