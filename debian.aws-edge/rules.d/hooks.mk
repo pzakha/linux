@@ -1,4 +1,4 @@
 do_tools_common=false
-skipabi		= true
-skipmodule	= true
-skipretpoline	= true
+skipabi=true
+skipmodule=true
+skipretpoline=true
