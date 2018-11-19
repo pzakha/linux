@@ -148,6 +148,8 @@ struct sdhci_msm_host {
 	u32 curr_io_level;
 	wait_queue_head_t pwr_irq_wait;
 	bool pwr_irq_flag;
+	bool use_cdr;
+	u32 transfer_mode;
 };
 
 static unsigned int msm_get_clock_rate_for_bus_mode(struct sdhci_host *host,
@@ -998,6 +1000,15 @@ static void sdhci_msm_set_uhs_signaling(struct sdhci_host *host,
 		msm_host->calibration_done = false;
 	}
 
+	if ((host->clock > CORE_FREQ_100MHZ) &&
+	    (uhs == MMC_TIMING_MMC_HS400 ||
+	     uhs == MMC_TIMING_MMC_HS200 ||
+	     uhs == MMC_TIMING_UHS_SDR104)) {
+		msm_host->use_cdr = true;
+	} else {
+		msm_host->use_cdr = false;
+	}
+
 	dev_dbg(mmc_dev(mmc), "%s: clock=%u uhs=%u ctrl_2=0x%x\n",
 		mmc_hostname(host->mmc), host->clock, uhs, ctrl_2);
 	sdhci_writew(host, ctrl_2, SDHCI_HOST_CONTROL2);
@@ -1311,6 +1322,53 @@ static void sdhci_msm_writeb(struct sdhci_host *host, u8 val, int reg)
 
 	if (req_type)
 		sdhci_msm_check_power_status(host, req_type);
+};
+
+static void sdhci_msm_set_cdr(struct sdhci_host *host, bool enable)
+{
+	u32 config, oldconfig = readl_relaxed(host->ioaddr + CORE_DLL_CONFIG);
+
+	config = oldconfig;
+	if (enable) {
+		config |= CORE_CDR_EN;
+		config &= ~CORE_CDR_EXT_EN;
+	} else {
+		config &= ~CORE_CDR_EN;
+		config |= CORE_CDR_EXT_EN;
+	}
+
+	if (config != oldconfig)
+		writel_relaxed(config, host->ioaddr + CORE_DLL_CONFIG);
+}
+
+// mmc: sdhci-msm: Disable CDR function on TX
+// XXX - dropped in favor of the upstream sdhci_msm_write_w()
+static void __sdhci_msm_write_w(struct sdhci_host *host, u16 val, int reg)
+{
+	struct sdhci_pltfm_host *pltfm_host = sdhci_priv(host);
+	struct sdhci_msm_host *msm_host = sdhci_pltfm_priv(pltfm_host);
+
+	if (msm_host->use_cdr) {
+		/* in HS200/SD104 timing mode,
+		 * CDR (clock data recovery) must be disabled for
+		 * TX transfer (writes) and tuning commands.
+		 */
+
+		if (reg == SDHCI_TRANSFER_MODE) {
+			msm_host->transfer_mode = val;
+		} else if (reg == SDHCI_COMMAND) {
+			u8 cmd = SDHCI_GET_CMD(val);
+
+			if ((msm_host->transfer_mode & SDHCI_TRNS_READ) &&
+			    (cmd != MMC_SEND_TUNING_BLOCK_HS200) &&
+			    (cmd != MMC_SEND_TUNING_BLOCK)) {
+				sdhci_msm_set_cdr(host, true);
+			} else {
+				sdhci_msm_set_cdr(host, false);
+			}
+		}
+	}
+	writew(val, host->ioaddr + reg);
 }
 
 static const struct of_device_id sdhci_msm_dt_match[] = {
