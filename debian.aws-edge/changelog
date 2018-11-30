@@ -1,6 +1,15 @@
-linux-aws-edge (4.18.0-1005.6~18.04.1) bionic; urgency=medium
+linux-aws-edge (4.18.0-1006.7~18.04.1) bionic; urgency=medium
 
-  * linux-aws-edge: 4.18.0-1005.6~18.04.1 -proposed tracker (LP: #1802746)
+  * linux-aws-edge: 4.18.0-1006.7~18.04.1 -proposed tracker (LP: #1805606)
+
+  * Miscellaneous Ubuntu changes
+    - [Config] linux-aws: enable arm64 build
+
+ -- Kamal Mostafa <kamal@canonical.com>  Mon, 19 Nov 2018 13:43:51 -0800
+
+linux-aws (4.18.0-1005.6) cosmic; urgency=medium
+
+  * linux-aws: 4.18.0-1005.6 -proposed tracker (LP: #1802749)
 
   * Improve AWS hibernation performance (LP: #1803613)
     - SAUCE: [aws] PM / hibernate: Speed up hibernation by batching requests
@@ -700,7 +709,7 @@ linux-aws-edge (4.18.0-1005.6~18.04.1) bionic; urgency=medium
   * Packaging resync (LP: #1786013)
     - [Package] add support for specifying the primary makefile
 
- -- Kamal Mostafa <kamal@canonical.com>  Mon, 19 Nov 2018 15:01:58 -0800
+ -- Khalid Elmously <khalid.elmously@canonical.com>  Fri, 16 Nov 2018 22:11:16 +0000
 
 linux-aws (4.18.0-1004.5) cosmic; urgency=medium
 
