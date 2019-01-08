@@ -703,8 +703,6 @@ static int csid_set_stream(struct v4l2_subdev *sd, int enable)
 		/* Config LUT */
 
 		dt_shift = (cid % 4) * 8;
-		df = csid_get_fmt_entry(csid->fmt[MSM_CSID_PAD_SINK].code)->
-								decode_format;
 
 		val = readl_relaxed(csid->base +
 				    CAMSS_CSID_CID_LUT_VC_n(ver, vc));
