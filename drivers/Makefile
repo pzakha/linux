@@ -186,3 +186,6 @@ obj-$(CONFIG_TEE)		+= tee/
 obj-$(CONFIG_MULTIPLEXER)	+= mux/
 obj-$(CONFIG_UNISYS_VISORBUS)	+= visorbus/
 obj-$(CONFIG_SIOX)		+= siox/
+
+# Catapult FPGA driver for linux-azure
+obj-$(CONFIG_CATAPULT_PCI)	+= catapult/
