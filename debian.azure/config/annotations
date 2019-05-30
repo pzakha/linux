@@ -115,6 +115,9 @@ CONFIG_VBOXGUEST                                   mark<ENFORCED> note<LP:#17966
 CONFIG_XEN_ACPI_PROCESSOR                          policy<{'amd64': '-'}>
 CONFIG_XEN_ACPI_PROCESSOR                          mark<ENFORCED> note<LP:#1671203>
 
+CONFIG_HYPERV_IOMMU                                policy<{'amd64': 'y'}>
+CONFIG_HYPERV_IOMMU                                mark<ENFORCED> note<LP:#1826447>
+
 # From linux-azure initial packaging
 
 CONFIG_POWERCAP                                    policy<{'amd64': 'n'}>
