@@ -688,7 +688,6 @@ static struct pci_driver efa_pci_driver = {
 	.remove         = efa_remove,
 };
 
-module_pci_driver(efa_pci_driver);
 #ifdef HAVE_CUSTOM_COMMANDS
 static ssize_t
 (*efa_everbs_cmd_table[EFA_EVERBS_CMD_MAX])(struct efa_dev *dev,
@@ -855,3 +854,6 @@ static void __exit efa_exit(void)
 				 EFA_EVERBS_MAX_DEVICES);
 #endif
 }
+
+module_init(efa_init);
+module_exit(efa_exit);
