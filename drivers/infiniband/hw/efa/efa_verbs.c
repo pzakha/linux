@@ -90,7 +90,8 @@ static const char *const efa_stats_names[] = {
 #define EFA_CHUNK_USED_SIZE \
 	((EFA_PTRS_PER_CHUNK * EFA_CHUNK_PAYLOAD_PTR_SIZE) + EFA_CHUNK_PTR_SIZE)
 
-#define EFA_SUPPORTED_ACCESS_FLAGS IB_ACCESS_LOCAL_WRITE
+#define EFA_SUPPORTED_ACCESS_FLAGS \
+	(IB_ACCESS_LOCAL_WRITE | IB_ACCESS_REMOTE_READ)
 
 struct pbl_chunk {
 	dma_addr_t dma_addr;
@@ -1950,7 +1951,7 @@ struct ib_mr *efa_reg_mr(struct ib_pd *ibpd, u64 start, u64 length,
 	params.pd = to_epd(ibpd)->pdn;
 	params.iova = virt_addr;
 	params.mr_length_in_bytes = length;
-	params.permissions = access_flags & 0x1;
+	params.permissions = access_flags;
 	max_page_shift = fls64(dev->dev_attr.page_size_cap);
 
 	efa_cont_pages(mr->umem, start, max_page_shift, &npages,
