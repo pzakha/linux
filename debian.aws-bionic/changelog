@@ -1,4 +1,4 @@
-linux-aws-edge (5.0.0-1019.21~18.04.1) bionic; urgency=medium
+linux-aws-5.0 (5.0.0-1019.21~18.04.1) bionic; urgency=medium
 
   * bionic/linux-aws-edge: 5.0.0-1019.21~18.04.1 -proposed tracker
     (LP: #1846074)
