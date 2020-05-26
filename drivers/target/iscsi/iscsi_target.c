@@ -4043,14 +4043,20 @@ static void iscsit_release_commands_from_conn(struct iscsi_conn *conn)
 			spin_lock_irq(&se_cmd->t_state_lock);
 			se_cmd->transport_state |= CMD_T_FABRIC_STOP;
 			spin_unlock_irq(&se_cmd->t_state_lock);
+			pr_debug("iscsit_release_cmds: process icmd 0x%px cmd 0x%px refcnt %d\n",
+				cmd, se_cmd, kref_read(&se_cmd->cmd_kref));
 		}
 	}
 	spin_unlock_bh(&conn->cmd_lock);
 
 	list_for_each_entry_safe(cmd, cmd_tmp, &tmp_list, i_conn_node) {
+		struct se_cmd *se_cmd = &cmd->se_cmd;
+
 		list_del_init(&cmd->i_conn_node);
 
 		iscsit_increment_maxcmdsn(cmd, sess);
+		pr_debug("iscsit_release_cmds: free icmd 0x%px cmd 0x%px refcnt %d\n",
+			cmd, se_cmd, kref_read(&se_cmd->cmd_kref));
 		iscsit_free_cmd(cmd, true);
 
 	}

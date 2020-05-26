@@ -219,6 +219,9 @@ static void core_tmr_drain_tmr_list(
 			pr_err("Unable to locate struct se_cmd for TMR\n");
 			continue;
 		}
+
+		pr_debug("drain_tmr_list: cmd 0x%px\n", cmd);
+
 		/*
 		 * If this function was called with a valid pr_res_key
 		 * parameter (eg: for PROUT PREEMPT_AND_ABORT service action
@@ -332,6 +335,8 @@ static void core_tmr_drain_state_list(
 	 */
 	spin_lock_irqsave(&dev->execute_task_lock, flags);
 	list_for_each_entry_safe(cmd, next, &dev->state_list, state_list) {
+		pr_debug("drain_state_list: cmd 0x%px refcnt %d\n", cmd, kref_read(&cmd->cmd_kref));
+
 		/*
 		 * For PREEMPT_AND_ABORT usage, only process commands
 		 * with a matching reservation key.

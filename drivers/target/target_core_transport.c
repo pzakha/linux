@@ -2729,7 +2729,7 @@ int transport_generic_free_cmd(struct se_cmd *cmd, int wait_for_tasks)
 		cmd->free_compl = &compl;
 	ret = target_put_sess_cmd(cmd);
 	if (aborted) {
-		pr_debug("Detected CMD_T_ABORTED for ITT: %llu\n", cmd->tag);
+		pr_debug("Detected CMD_T_ABORTED for ITT: %llu p: 0x%px\n", cmd->tag, cmd);
 		wait_for_completion(&compl);
 		ret = 1;
 	}
@@ -2910,15 +2910,15 @@ void target_show_cmd(const char *pfx, struct se_cmd *cmd)
 	struct se_tmr_req *tmf = cmd->se_tmr_req;
 
 	if (!(cmd->se_cmd_flags & SCF_SCSI_TMR_CDB)) {
-		pr_debug("%scmd %#02x:%#02x with tag %#llx dir %s i_state %d t_state %s len %d refcnt %d transport_state %s\n",
-			 pfx, cdb[0], cdb[1], cmd->tag,
+		pr_debug("%scmd %#02x:%#02x p 0x%px with tag %#llx dir %s i_state %d t_state %s len %d refcnt %d transport_state %s\n",
+			 pfx, cdb[0], cdb[1], cmd, cmd->tag,
 			 data_dir_name(cmd->data_direction),
 			 cmd->se_tfo->get_cmd_state(cmd),
 			 cmd_state_name(cmd->t_state), cmd->data_length,
 			 kref_read(&cmd->cmd_kref), ts_str);
 	} else {
-		pr_debug("%stmf %s with tag %#llx ref_task_tag %#llx i_state %d t_state %s refcnt %d transport_state %s\n",
-			 pfx, target_tmf_name(tmf->function), cmd->tag,
+		pr_debug("%stmf %s p 0x%px with tag %#llx ref_task_tag %#llx i_state %d t_state %s refcnt %d transport_state %s\n",
+			 pfx, target_tmf_name(tmf->function), cmd, cmd->tag,
 			 tmf->ref_task_tag, cmd->se_tfo->get_cmd_state(cmd),
 			 cmd_state_name(cmd->t_state),
 			 kref_read(&cmd->cmd_kref), ts_str);
