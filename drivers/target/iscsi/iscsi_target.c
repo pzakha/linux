@@ -968,6 +968,8 @@ static void iscsit_ack_from_expstatsn(struct iscsi_conn *conn, u32 exp_statsn)
 
 	list_for_each_entry_safe(cmd, cmd_p, &ack_list, i_conn_node) {
 		list_del_init(&cmd->i_conn_node);
+		pr_debug("iscsit_free_cmd caller: iscsit_ack_from_expstatsn icmd 0x%px cmd 0x%px refcnt %d\n",
+				cmd, &cmd->se_cmd, kref_read(&cmd->se_cmd.cmd_kref));
 		iscsit_free_cmd(cmd, false);
 	}
 }
@@ -1815,8 +1817,11 @@ int iscsit_process_nop_out(struct iscsi_conn *conn, struct iscsi_cmd *cmd,
 	 * Just ignore for now.
 	 */
 
-	if (cmd)
+	if (cmd) {
+		pr_debug("iscsit_free_cmd caller: iscsit_process_nop_out icmd 0x%px cmd 0x%px refcnt %d\n",
+			cmd, &cmd->se_cmd, kref_read(&cmd->se_cmd.cmd_kref));
 		iscsit_free_cmd(cmd, false);
+	}
 
         return 0;
 }
@@ -1918,8 +1923,11 @@ static int iscsit_handle_nop_out(struct iscsi_conn *conn, struct iscsi_cmd *cmd,
 
 	return iscsit_process_nop_out(conn, cmd, hdr);
 out:
-	if (cmd)
+	if (cmd) {
+		pr_debug("iscsit_free_cmd caller: iscsit_handle_nop_out icmd 0x%px cmd 0x%px refcnt %d\n",
+			cmd, &cmd->se_cmd, kref_read(&cmd->se_cmd.cmd_kref));
 		iscsit_free_cmd(cmd, false);
+	}
 
 	kfree(ping_data);
 	return ret;
@@ -3584,6 +3592,8 @@ iscsit_immediate_queue(struct iscsi_conn *conn, struct iscsi_cmd *cmd, int state
 		list_del_init(&cmd->i_conn_node);
 		spin_unlock_bh(&conn->cmd_lock);
 
+		pr_debug("iscsit_free_cmd caller: iscsit_immediate_queue icmd 0x%px cmd 0x%px refcnt %d\n",
+			cmd, &cmd->se_cmd, kref_read(&cmd->se_cmd.cmd_kref));
 		iscsit_free_cmd(cmd, false);
 		break;
 	case ISTATE_SEND_NOPIN_WANT_RESPONSE:
@@ -4063,6 +4073,8 @@ static void iscsit_release_commands_from_conn(struct iscsi_conn *conn)
 		iscsit_increment_maxcmdsn(cmd, sess);
 		pr_debug("iscsit_release_cmds: free icmd 0x%px cmd 0x%px refcnt %d\n",
 			cmd, se_cmd, kref_read(&se_cmd->cmd_kref));
+		pr_debug("iscsit_free_cmd caller: iscsit_release_commands_from_conn icmd 0x%px cmd 0x%px refcnt %d\n",
+			cmd, &cmd->se_cmd, kref_read(&cmd->se_cmd.cmd_kref));
 		iscsit_free_cmd(cmd, true);
 
 	}
