@@ -1531,6 +1531,7 @@ static void lio_set_default_node_attributes(struct se_node_acl *se_acl)
 
 static int lio_check_stop_free(struct se_cmd *se_cmd)
 {
+	pr_debug("lio_check_stop_free: put cmd 0x%px refcnt %d\n", se_cmd, kref_read(&se_cmd->cmd_kref));
 	return target_put_sess_cmd(se_cmd);
 }
 

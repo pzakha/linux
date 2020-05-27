@@ -866,6 +866,7 @@ static int iscsit_add_reject_from_cmd(
 	 */
 	if (do_put) {
 		pr_debug("iscsi reject: calling target_put_sess_cmd >>>>>>\n");
+		pr_debug("iscsit_add_reject_from_cmd: put cmd 0x%px refcnt %d\n", &cmd->se_cmd, kref_read(&cmd->se_cmd.cmd_kref));
 		target_put_sess_cmd(&cmd->se_cmd);
 	}
 	return -1;
@@ -1225,6 +1226,7 @@ int iscsit_process_scsi_cmd(struct iscsi_conn *conn, struct iscsi_cmd *cmd,
 		if (cmdsn_ret == CMDSN_ERROR_CANNOT_RECOVER)
 			return -1;
 		else if (cmdsn_ret == CMDSN_LOWER_THAN_EXP) {
+			pr_debug("iscsit_process_scsi_cmd 1: put cmd 0x%px refcnt %d\n", &cmd->se_cmd, kref_read(&cmd->se_cmd.cmd_kref));
 			target_put_sess_cmd(&cmd->se_cmd);
 			return 0;
 		}
@@ -1241,6 +1243,7 @@ int iscsit_process_scsi_cmd(struct iscsi_conn *conn, struct iscsi_cmd *cmd,
 		if (!cmd->sense_reason)
 			return 0;
 
+		pr_debug("iscsit_process_scsi_cmd 2: put cmd 0x%px refcnt %d\n", &cmd->se_cmd, kref_read(&cmd->se_cmd.cmd_kref));
 		target_put_sess_cmd(&cmd->se_cmd);
 		return 0;
 	}
@@ -1306,6 +1309,7 @@ after_immediate_data:
 
 			rc = iscsit_dump_data_payload(cmd->conn,
 						      cmd->first_burst_len, 1);
+			pr_debug("iscsit_get_immediate_data: put cmd 0x%px refcnt %d\n", &cmd->se_cmd, kref_read(&cmd->se_cmd.cmd_kref));
 			target_put_sess_cmd(&cmd->se_cmd);
 			return rc;
 		} else if (cmd->unsolicited_data)
@@ -2093,6 +2097,7 @@ attach:
 		if (cmdsn_ret == CMDSN_HIGHER_THAN_EXP) {
 			out_of_order_cmdsn = 1;
 		} else if (cmdsn_ret == CMDSN_LOWER_THAN_EXP) {
+			pr_debug("iscsit_handle_task_mgt_cmd 1: put cmd 0x%px refcnt %d\n", &cmd->se_cmd, kref_read(&cmd->se_cmd.cmd_kref));
 			target_put_sess_cmd(&cmd->se_cmd);
 			return 0;
 		} else if (cmdsn_ret == CMDSN_ERROR_CANNOT_RECOVER) {
@@ -2118,6 +2123,7 @@ attach:
 	 * TMR TASK_REASSIGN.
 	 */
 	iscsit_add_cmd_to_response_queue(cmd, conn, cmd->i_state);
+	pr_debug("iscsit_handle_task_mgt_cmd 2: put cmd 0x%px refcnt %d\n", &cmd->se_cmd, kref_read(&cmd->se_cmd.cmd_kref));
 	target_put_sess_cmd(&cmd->se_cmd);
 	return 0;
 }

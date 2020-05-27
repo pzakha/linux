@@ -786,8 +786,10 @@ static void target_handle_abort(struct se_cmd *cmd)
 		 * releasing the descriptor via TFO->release_cmd().
 		 */
 		cmd->se_tfo->aborted_task(cmd);
-		if (ack_kref)
+		if (ack_kref) {
+			pr_debug("target_handle_abort: put cmd 0x%px refcnt %d\n", cmd, kref_read(&cmd->cmd_kref));
 			WARN_ON_ONCE(target_put_sess_cmd(cmd) != 0);
+		}
 		/*
 		 * To do: establish a unit attention condition on the I_T
 		 * nexus associated with cmd. See also the paragraph "Aborting
@@ -2727,6 +2729,7 @@ int transport_generic_free_cmd(struct se_cmd *cmd, int wait_for_tasks)
 	}
 	if (aborted)
 		cmd->free_compl = &compl;
+	pr_debug("transport_generic_free_cmd: put cmd 0x%px refcnt %d\n", cmd, kref_read(&cmd->cmd_kref));
 	ret = target_put_sess_cmd(cmd);
 	if (aborted) {
 		pr_debug("Detected CMD_T_ABORTED for ITT: %llu p: 0x%px\n", cmd->tag, cmd);

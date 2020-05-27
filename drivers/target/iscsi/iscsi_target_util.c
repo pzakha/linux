@@ -776,6 +776,7 @@ void iscsit_free_cmd(struct iscsi_cmd *cmd, bool shutdown)
 		rc = transport_generic_free_cmd(se_cmd, shutdown);
 		if (!rc && shutdown && se_cmd->se_sess) {
 			__iscsit_free_cmd(cmd, shutdown);
+			pr_debug("iscsit_free_cmd: put cmd 0x%px refcnt %d\n", se_cmd, kref_read(&se_cmd->cmd_kref));
 			target_put_sess_cmd(se_cmd);
 		}
 	} else {
