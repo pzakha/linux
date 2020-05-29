@@ -492,9 +492,7 @@ EXPORT_SYMBOL(iscsit_queue_rsp);
 void iscsit_aborted_task(struct iscsi_conn *conn, struct iscsi_cmd *cmd)
 {
 	spin_lock_bh(&conn->cmd_lock);
-	if (!list_empty(&cmd->i_conn_node) &&
-	    !(cmd->se_cmd.transport_state & CMD_T_FABRIC_STOP))
-		list_del_init(&cmd->i_conn_node);
+	list_del_init(&cmd->i_conn_node);
 	spin_unlock_bh(&conn->cmd_lock);
 
 	__iscsit_free_cmd(cmd, true);
@@ -4041,7 +4039,8 @@ out:
 
 static void iscsit_release_commands_from_conn(struct iscsi_conn *conn)
 {
-	LIST_HEAD(tmp_list);
+	LIST_HEAD(tmp_cmd_list);
+	LIST_HEAD(tmp_tmr_list);
 	struct iscsi_cmd *cmd = NULL, *cmd_tmp = NULL;
 	struct iscsi_session *sess = conn->sess;
 	/*
@@ -4050,9 +4049,9 @@ static void iscsit_release_commands_from_conn(struct iscsi_conn *conn)
 	 * has been reset -> returned sleeping pre-handler state.
 	 */
 	spin_lock_bh(&conn->cmd_lock);
-	list_splice_init(&conn->conn_cmd_list, &tmp_list);
+	list_splice_init(&conn->conn_cmd_list, &tmp_cmd_list);
 
-	list_for_each_entry(cmd, &tmp_list, i_conn_node) {
+	list_for_each_entry_safe(cmd, cmd_tmp, &tmp_cmd_list, i_conn_node) {
 		struct se_cmd *se_cmd = &cmd->se_cmd;
 
 		if (se_cmd->se_tfo != NULL) {
@@ -4062,12 +4061,31 @@ static void iscsit_release_commands_from_conn(struct iscsi_conn *conn)
 			pr_debug("iscsit_release_cmds: process icmd 0x%px cmd 0x%px refcnt %d\n",
 				cmd, se_cmd, kref_read(&se_cmd->cmd_kref));
 		}
+
+		if (se_cmd->se_cmd_flags & SCF_SCSI_TMR_CDB) {
+			list_move_tail(&cmd->i_conn_node, &tmp_tmr_list);
+		}
 	}
 	spin_unlock_bh(&conn->cmd_lock);
 
-	list_for_each_entry_safe(cmd, cmd_tmp, &tmp_list, i_conn_node) {
+	list_for_each_entry_safe(cmd, cmd_tmp, &tmp_tmr_list, i_conn_node) {
 		struct se_cmd *se_cmd = &cmd->se_cmd;
 
+		list_del_init(&cmd->i_conn_node);
+
+		iscsit_increment_maxcmdsn(cmd, sess);
+		pr_debug("iscsit_release_cmds: free tmr icmd 0x%px cmd 0x%px refcnt %d\n",
+			cmd, se_cmd, kref_read(&se_cmd->cmd_kref));
+		pr_debug("iscsit_free_cmd caller: iscsit_release_commands_from_conn tmr icmd 0x%px cmd 0x%px refcnt %d\n",
+			cmd, &cmd->se_cmd, kref_read(&cmd->se_cmd.cmd_kref));
+		iscsit_free_cmd(cmd, true);
+
+	}
+
+	list_for_each_entry_safe(cmd, cmd_tmp, &tmp_cmd_list, i_conn_node) {
+		struct se_cmd *se_cmd = &cmd->se_cmd;
+
+		WARN_ON(se_cmd->transport_state & CMD_T_ABORTED);
 		list_del_init(&cmd->i_conn_node);
 
 		iscsit_increment_maxcmdsn(cmd, sess);
